@@ -5,12 +5,6 @@ from math import ceil
 
 from cvlab.diagram.elements.base import *
 
-# limit gpu usage for tensorflow
-config = tensorflow.compat.v1.ConfigProto(allow_soft_placement=True)
-config.gpu_options.allow_growth = True
-sess = tensorflow.compat.v1.Session(config=config)
-tensorflow.compat.v1.keras.backend.set_session(sess)
-
 
 class Predict(NormalElement):
     name = 'Predict'
@@ -42,14 +36,14 @@ class Predict(NormalElement):
         if model is not None and image is not None:
             self.may_interrupt()
             try:
-                if image.ndim == 2:  # expand iamge dimensions for convolution layers
+                if image.ndim == 2:  # expand image dimensions for convolution layers
                     image = np.expand_dims(image, axis=2)
                 image = np.expand_dims(image, axis=0)
 
                 activation = self.activation_model.predict(image)
                 layer_index = parameters["layer"]
                 if len(activation) <= layer_index:
-                    raise IndexError("Layer index: "+str(layer_index)+" is out of range<0;"+str(len(activation)-1)+">")
+                    raise IndexError("Layer index: "+str(layer_index)+" is out of range <0;"+str(len(activation)-1)+">")
 
                 imgs_in_row = parameters["row"]
                 spacing = parameters["spacing"]
