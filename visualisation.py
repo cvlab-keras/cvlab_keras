@@ -10,40 +10,56 @@ from cvlab.diagram.elements.base import *
 plt.style.use('ggplot')
 
 
+class Diagram:
+    def __init__(self, name, dim):
+        self.name = name
+        self.figure, self.ax = plt.subplots(nrows=dim[0], ncols=dim[1])
+
+    def live_plotter(self, x_vec, y_vec):
+        pass
+
+    def set_ax(self, line, x_vec, y_vec, ax):
+        line.set_xdata(x_vec)
+        line.set_ydata(y_vec)
+        ax.relim()
+        ax.autoscale_view()
+
+    def draw_figure(self):
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+        data = np.fromstring(self.figure.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+        data = data.reshape(self.figure.canvas.get_width_height()[::-1] + (3,))
+        return data
+
+
+class MultiDiagram(Diagram):
+    def __init__(self, name, dim):
+        super().__init__(name, dim)
+        self.figure.tight_layout(pad=4.0)
+        self.line = list()
+        for a in self.ax:
+            tmp, = a.plot([], [], lw=2)
+            self.line.append(tmp)
+
+    def live_plotter(self, x_vec, y_vec):
+        for i in range(len(self.line)):
+            self.set_ax(self.line[i], x_vec, y_vec[i], self.ax[i])
+        return self.draw_figure()
+
+
+class SingleDiagram(Diagram):
+    def __init__(self, name, dim):
+        super().__init__(name, dim)
+        self.line, = self.ax.plot([], [], lw=2)
+
+    def live_plotter(self, x_vec, y_vec):
+        self.set_ax(self.line, x_vec, y_vec, self.ax)
+        return self.draw_figure()
+
+
 class Visualisation(NormalElement):
     name = "Live plotting"
     comment = "Generates plot from loss function in real time"
-
-    class Diagram:
-        def __init__(self, name, dim):
-            self.name = name
-            self.figure, self.ax = plt.subplots(nrows=dim[0], ncols=dim[1])
-            if dim[0] > 1:
-                self.figure.tight_layout(pad=4.0)
-                self.line = list()
-                for a in self.ax:
-                    tmp, = a.plot([], [], lw=2)
-                    self.line.append(tmp)
-            else:
-                self.line, = self.ax.plot([], [], lw=2)
-
-        def live_plotter(self, x_vec, y_vec):
-            if isinstance(self.line, list):
-                for i in range(len(self.line)):
-                    self.set_ax(self.line[i], x_vec, y_vec[i], self.ax[i])
-            else:
-                self.set_ax(self.line, x_vec, y_vec, self.ax)
-            self.figure.canvas.draw()
-            self.figure.canvas.flush_events()
-            data = np.fromstring(self.figure.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-            data = data.reshape(self.figure.canvas.get_width_height()[::-1] + (3,))
-            return data
-
-        def set_ax(self, line, x_vec, y_vec, ax):
-            line.set_xdata(x_vec)
-            line.set_ydata(y_vec)
-            ax.relim()
-            ax.autoscale_view()
 
     def __init__(self):
         super(Visualisation, self).__init__()
@@ -60,17 +76,17 @@ class Visualisation(NormalElement):
 
     def set_all_diagrams(self):
         # Settings for loss function
-        self.diagrams.append(self.Diagram("Loss", [1, 1]))
+        self.diagrams.append(SingleDiagram("Loss", [1, 1]))
         self.configure_plot(self.diagrams[0].ax, 'Loss function', 'Batch', 'Loss')
         self.diagrams[0].line.set_color('r')
 
         # Settings for accuracy function
-        self.diagrams.append(self.Diagram("Accuracy", [1, 1]))
+        self.diagrams.append(SingleDiagram("Accuracy", [1, 1]))
         self.configure_plot(self.diagrams[1].ax, 'Accuracy function', 'Batch', 'Accuracy')
         self.diagrams[1].line.set_color('g')
 
         # Settings for diagram with all functions
-        self.diagrams.append(self.Diagram("All", [2, 1]))
+        self.diagrams.append(MultiDiagram("All", [2, 1]))
         self.configure_plot(self.diagrams[2].ax[0], 'Loss function', 'Batch', 'Loss')
         self.configure_plot(self.diagrams[2].ax[1], 'Accuracy function', 'Batch', 'Accuracy')
         self.diagrams[2].line[0].set_color('r')
@@ -152,4 +168,4 @@ class TensorboardStarter(NormalElement):
         webbrowser.open('http://localhost:6006')
 
 
-register_elements_auto(__name__, locals(), "AI Visualisation", 10)
+register_elements("AI Visualisation", [Visualisation, RealTimeGenerator, TensorboardStarter], 10)
