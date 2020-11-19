@@ -96,4 +96,41 @@ class Predict(NormalElement):
         return final_msg
 
 
-register_elements_auto(__name__, locals(), "Model operations", 1)
+class PredictionDecoder(NormalElement):
+    name = 'Prediction decoder'
+    comment = 'Maps probabilistic prediction to labels'
+
+    def get_attributes(self):
+        return [Input("prediction", name="prediction"), Input("labels", name="labels")], \
+               [Output("decoded", name="decoded predictions", preview_only=True)], \
+               [IntParameter("top", "top n probabilities", value=5, min_=1)]
+
+    def process_inputs(self, inputs, outputs, parameters):
+        prediction = inputs["prediction"].value
+        labels = inputs["labels"].value
+        top_n = parameters["top"]
+
+        if prediction is not None and labels is not None:
+            labels_probabilities = sorted(zip(labels, prediction), key=lambda item: item[1], reverse=True)
+            labels, prediction = zip(*labels_probabilities)
+            formatted_prediction = PredictionDecoder.format_decoded_prediction(prediction, labels, top_n)
+            outputs["decoded"] = Data(formatted_prediction)
+
+    @staticmethod
+    def format_decoded_prediction(prediction, labels, top_n):
+        layout_base = '{:4} {:16.16} '  # number column is 4 chars wide and name one is 16 (cropping to long names)
+        header = layout_base + '{:6}'  # 6 characters for probabilities title
+        layout = layout_base + '{:0.4f}'  # display 4 decimal places of probability value
+        formatted = header.format('no.', 'label', 'prob.') + '\n'
+
+        top_lim = top_n if top_n <= len(prediction) else len(prediction)  # limit top_n to number of probabilities
+        for i in range(0, top_lim):
+            index = str(i + 1) + '.'
+            label = labels[i]
+            probability = prediction[i]
+            formatted += layout.format(index, label, probability)
+            formatted += '\n' if i != top_lim - 1 else ''  # don't add endline in the last line
+        return formatted
+
+
+register_elements("Model operations", [Predict, PredictionDecoder, LabelsGen, PredGen], 1)
