@@ -11,3 +11,4 @@ def get_dir(dir_path):
 MODULE_DIR = os.path.abspath(__file__ + "/..").replace("\\", "/")
 IMAGES_DIR = get_dir(MODULE_DIR + "/images")
 LOGS_DIR = get_dir(MODULE_DIR + "/logs")
+SAMPLES_DIR = MODULE_DIR + "/samples"
