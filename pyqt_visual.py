@@ -36,7 +36,7 @@ class SingleCanvas(MplCanvas):
     def __init__(self, width=5, height=4, dpi=100):
         super().__init__(width, height, dpi)
         self.ax = self.figure.add_subplot(111)
-        self.line, = self.ax.plot([], [])
+        self.line, = self.ax.plot([], [], linewidth=0.5)
 
     def live_plotter(self, x_vec, y_vec):
         self.set_ax(self.line, x_vec, y_vec, self.ax)
@@ -53,7 +53,7 @@ class MultiCanvas(MplCanvas):
         self.figure.tight_layout(pad=4.0)
         self.line = list()
         for a in self.ax:
-            tmp, = a.plot([], [], lw=2)
+            tmp, = a.plot([], [], lw=0.5)
             self.line.append(tmp)
 
     def live_plotter(self, x_vec, y_vec):
