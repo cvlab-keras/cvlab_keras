@@ -8,11 +8,12 @@ from matplotlib.figure import Figure
 matplotlib.use('Qt5Agg')
 
 
-class MplCanvas(FigureCanvasQTAgg):
+class Graph(FigureCanvasQTAgg):
 
-    def __init__(self,  width, height, dpi):
+    def __init__(self,  name, width, height, dpi):
         self.figure = Figure(figsize=(width, height), dpi=dpi)
-        super(MplCanvas, self).__init__(self.figure)
+        self.name = name
+        super(Graph, self).__init__(self.figure)
 
     def live_plotter(self, x_vec, y_vec):
         pass
@@ -24,29 +25,37 @@ class MplCanvas(FigureCanvasQTAgg):
         data = data.reshape(self.figure.canvas.get_width_height()[::-1] + (3,))
         return data
 
-    def set_ax(self, line, x_vec, y_vec, ax):
+    def set_ax(self, line, ax, x_vec, y_vec):
         line.set_xdata(x_vec)
         line.set_ydata(y_vec)
         ax.relim()
         ax.autoscale_view()
 
+    def configure(self, ax, title, y_label, x_label="Batch"):
+        ax.set_autoscaley_on(True)
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
 
-class SingleCanvas(MplCanvas):
 
-    def __init__(self, width=5, height=4, dpi=100):
-        super().__init__(width, height, dpi)
+class SingleGraph(Graph):
+
+    def __init__(self, name, width=5, height=4, dpi=100):
+        super().__init__(name, width, height, dpi)
         self.ax = self.figure.add_subplot(111)
         self.line, = self.ax.plot([], [], linewidth=0.5)
+        self.title = name + " function"
+        self.configure(self.ax, self.title, self.name)
 
     def live_plotter(self, x_vec, y_vec):
-        self.set_ax(self.line, x_vec, y_vec, self.ax)
+        self.set_ax(self.line, self.ax, x_vec, y_vec)
         return self.draw_figure()
 
 
-class MultiCanvas(MplCanvas):
+class MultiGraph(Graph):
 
-    def __init__(self, width=5, height=4, dpi=100):
-        super().__init__(width, height, dpi)
+    def __init__(self, name, width=5, height=4, dpi=100):
+        super().__init__(name, width, height, dpi)
         self.ax = list()
         self.ax.append(self.figure.add_subplot(211))
         self.ax.append(self.figure.add_subplot(212))
@@ -55,15 +64,21 @@ class MultiCanvas(MplCanvas):
         for a in self.ax:
             tmp, = a.plot([], [], lw=0.5)
             self.line.append(tmp)
+        self.title = [n + " function" for n in self.name]
+        self.configure_plots()
+
+    def configure_plots(self):
+        for i in range(len(self.ax)):
+            super().configure(self.ax[i], self.title[i], self.name[i])
 
     def live_plotter(self, x_vec, y_vec):
         for i in range(len(self.line)):
-            self.set_ax(self.line[i], x_vec, y_vec[i], self.ax[i])
+            self.set_ax(self.line[i], self.ax[i], x_vec, y_vec[i])
         return self.draw_figure()
 
 
 class PyQtVisualisation(NormalElement):
-    name = "Live plotting for PYQT"
+    name = "Live plotting"
     comment = """\
     Generates plots for different metrics functions in real time.
     
@@ -103,31 +118,20 @@ class PyQtVisualisation(NormalElement):
 
     def create_diagram(self, type, name):
         if type != self.ALL:
-            self.diagrams.insert(type, SingleCanvas())
-            self.configure_plot(self.diagrams[type].ax, name + " function", name)
+            self.diagrams.insert(type, SingleGraph(name))
         else:
-            self.diagrams.insert(type, MultiCanvas())
-            self.configure_plot(ax=self.diagrams[type].ax[self.LOSS],
-                                title=name[self.LOSS]+" function", ylabel=name[self.LOSS])
-            self.configure_plot(ax=self.diagrams[type].ax[self.ACCURACY],
-                                title=name[self.ACCURACY]+" function", ylabel=name[self.ACCURACY])
+            self.diagrams.insert(type, MultiGraph(name))
         self.widget_stack_fig.addWidget(self.diagrams[type])
         self.toolbars.insert(type, NavigationToolbar(self.diagrams[type], self))
         self.widget_stack_bar.addWidget(self.toolbars[type])
 
-    def configure_plot(self, ax, title, ylabel, xlabel="Batch"):
-        ax.set_autoscaley_on(True)
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-
     def get_attributes(self):
-        return [Input("input")], [Output("plot")], [IntParameter("batch_step", value=1, min_=1),
+        return [Input("metrics")], [Output("image")], [IntParameter("batch_step", value=1, min_=1),
                                                     ComboboxParameter("function", {"Loss": "loss",
                                                                                    "Accuracy": "acc", "All": "all"})]
 
     def process_inputs(self, inputs, outputs, parameters):
-        model_data = inputs["input"].value
+        model_data = inputs["metrics"].value
         if model_data != self.input_param:
             self.input_param = model_data
             self.loss.append(model_data["loss"])
@@ -141,7 +145,7 @@ class PyQtVisualisation(NormalElement):
             self.combo_param = func
             self.choose_param(func)
 
-        outputs["plot"] = Data(self.img)
+        outputs["image"] = Data(self.img)
 
     def choose_param(self, func):
         if func == "loss":
@@ -167,4 +171,4 @@ class PyQtVisualisation(NormalElement):
             return [self.loss, self.accuracy]
 
 
-register_elements("AI Visualisation", [PyQtVisualisation], 10)
+register_elements("Keras Plotting", [PyQtVisualisation], 10)
