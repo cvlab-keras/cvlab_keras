@@ -1,11 +1,12 @@
 # Machine learning toolkit for CV-Lab
 
-`cvlab_keras` is a plugin for [CV-Lab](https://github.com/cvlab-ai/cvlab). 
-It adds a toolbox for machine learning and a bunch of examples.
+`cvlab_keras` is a plugin for [CV-Lab application](https://github.com/cvlab-ai/cvlab). 
+It adds a toolkit for machine learning and a bunch of examples.
 
-The toolbox is a wrapper for machine learning library [`tf.keras`](https://www.tensorflow.org/api_docs/python/tf/keras).
+This extension is a wrapper for machine learning library 
+[`tf.keras`](https://www.tensorflow.org/api_docs/python/tf/keras).
 
-Requirements: `tensorflow`
+Requirements: `tensorflow` # TODO (keras) specify requirements 
 
 # Installation
 
