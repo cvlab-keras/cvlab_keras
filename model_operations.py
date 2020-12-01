@@ -1,5 +1,3 @@
-import tensorflow
-
 from tensorflow.keras import models
 from math import ceil
 
@@ -128,4 +126,46 @@ class PredictionDecoder(NormalElement):
         return formatted
 
 
-register_elements("Model operations", [Predict, PredictionDecoder], 1)
+class ModelTraining(NormalElement):
+    name = 'Model training'
+    comment = 'Performs single train step on batch of data'
+
+    def __init__(self):
+        super(ModelTraining, self).__init__()
+        self.batch = None
+        self.labels = None
+        self.model = None
+
+    def get_attributes(self):
+        return [Input("model"), Input("images", name="images"), Input("labels", name="labels")], \
+               [Output("metrics", name="metrics"),
+                Output("model", name="trained model")], []
+
+    def get_processing_units(self, inputs, parameters):
+        """Desequences input data"""
+        outputs = {name: Data() for name in self.outputs}
+        units = [ProcessingUnit(self, inputs, parameters, outputs)]
+        return units, outputs
+
+    def process_inputs(self, inputs, outputs, parameters):
+        model = inputs["model"].value
+        batch = inputs["images"].value
+        labels = inputs["labels"].value
+
+        if model is not None and (model != self.model or batch != self.batch):
+            self.batch = batch
+            self.labels = labels
+            self.model = model
+
+            images = np.array([image.value for image in batch])
+            if images.ndim == 3:
+                images = np.expand_dims(images, axis=3)     # add one axis for grayscale images
+
+            result = model.train_on_batch(images, labels, return_dict=True)
+            outputs["metrics"] = Data(result)
+            outputs["model"] = Data(model)
+
+            self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
+
+
+register_elements("Model operations", [Predict, PredictionDecoder, ModelTraining], 1)
