@@ -42,7 +42,7 @@ class Predict(NormalElement):
         if model is not None and image is not None:
             self.may_interrupt()
             try:
-                if image.ndim == 2:  # expand iamge dimensions for convolution layers
+                if image.ndim == 2:  # expand image dimensions for convolution layers
                     image = np.expand_dims(image, axis=2)
                 image = np.expand_dims(image, axis=0)
 
@@ -102,11 +102,11 @@ class PredictionDecoder(NormalElement):
 
     def get_attributes(self):
         return [Input("prediction", name="prediction"), Input("labels", name="labels")], \
-               [Output("decoded", name="decoded predictions", preview_only=True)], \
+               [Output("decoded", name="decoded prediction", preview_only=True)], \
                [IntParameter("top", "top n probabilities", value=5, min_=1)]
 
     def process_inputs(self, inputs, outputs, parameters):
-        prediction = inputs["prediction"].value
+        prediction = inputs["prediction"].value[0]
         labels = inputs["labels"].value
         top_n = parameters["top"]
 
@@ -133,4 +133,4 @@ class PredictionDecoder(NormalElement):
         return formatted
 
 
-register_elements("Model operations", [Predict, PredictionDecoder, LabelsGen, PredGen], 1)
+register_elements("Model operations", [Predict, PredictionDecoder], 1)
