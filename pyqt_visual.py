@@ -150,10 +150,8 @@ class PyQtVisualisation(NormalElement):
     def choose_param(self, func):
         if func == "loss":
             self.print_result(self.LOSS)
-
         elif func == "acc":
             self.print_result(self.ACCURACY)
-
         elif func == "all":
             self.print_result(self.ALL)
 
