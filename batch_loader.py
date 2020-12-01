@@ -152,6 +152,7 @@ class KerasDatasetBatchLoader(_BatchLoader):
               "For the most efficient processing set the batch size to the power of 2.\n" \
               "For more information see https://www.tensorflow.org/api_docs/python/tf/keras/datasets"
     type = None
+    dataset_name = None
 
     keras_datasets = {
         "MNIST": datasets.mnist,
@@ -171,14 +172,14 @@ class KerasDatasetBatchLoader(_BatchLoader):
                 ButtonParameter("reload", self.reload, "Reload dataset")]
 
     def update_parameters(self):
-        dataset = self.parameters["dataset"].get()
+        dataset_name = self.parameters["dataset"].get()
         type = self.parameters["type"].get()
         epochs = self.parameters["epochs"].get()
         batch_size = self.parameters["batch_size"].get()
         should_reload = False
 
-        if self.dataset != dataset:
-            self.dataset = dataset
+        if self.dataset_name != dataset_name:
+            self.dataset_name = dataset_name
             should_reload = True
         if self.type != type:
             self.type = type
@@ -190,11 +191,8 @@ class KerasDatasetBatchLoader(_BatchLoader):
         return should_reload
 
     def generate_dataset(self):
-        type = self.parameters["type"].get()       # train or test type of dataset
-        dataset_key = self.parameters["dataset"].get()
-        dataset = self.keras_datasets.get(dataset_key)
-
-        self.dataset = dataset.load_data()[type]
+        dataset = self.keras_datasets.get(self.dataset_name)
+        self.dataset = dataset.load_data()[self.type]
         self.number_of_batches = math.ceil(len(self.dataset[0]) / self.batch_size)
 
     def get_next_batch(self):
