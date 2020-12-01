@@ -106,7 +106,7 @@ class PredictionDecoder(NormalElement):
                [IntParameter("top", "top n probabilities", value=5, min_=1)]
 
     def process_inputs(self, inputs, outputs, parameters):
-        prediction = inputs["prediction"]
+        prediction = inputs["prediction"].value
         prediction = prediction[0] if prediction.ndim > 1 else prediction  # take prediction for first image
         labels = inputs["labels"].value
         top_n = parameters["top"]
