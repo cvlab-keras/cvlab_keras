@@ -1,5 +1,5 @@
 from cvlab.diagram.elements.base import *
-from tensorflow.keras import datasets
+from tensorflow.keras import datasets, utils
 
 import matplotlib.pyplot as plt
 from random import shuffle
@@ -61,6 +61,7 @@ class _BatchLoader(InputElement):
             self.may_interrupt()
             images, labels = self.get_next_batch()
             image_sequence = Sequence([Data(image) for image in images])
+            labels = utils.to_categorical(labels, len(self.classes))    # TODO (keras) move it to separate element
             label_sequence = Data(labels)
 
             self.set_state(Element.STATE_READY)
@@ -92,7 +93,9 @@ class BatchLoaderFromFile(_BatchLoader):
 
     def get_attributes(self):
         return [],\
-               [Output("images"), Output("labels", preview_enabled=False), Output("classes", preview_enabled=False)], \
+               [Output("images"),
+                Output("labels", name="batch labels", preview_enabled=False),
+                Output("classes", name="all labels", preview_enabled=False)], \
                [PathParameter("file", name="file (.txt)", value="", extension_filter=TXT_FILTER),
                 IntParameter("epochs", value=1, min_=1, max_=100),
                 IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
@@ -148,6 +151,8 @@ class KerasDatasetBatchLoader(_BatchLoader):
     comment = "Loads train or test dataset from keras built-in image datasets.\n" \
               "For the most efficient processing set the batch size to the power of 2.\n" \
               "For more information see https://www.tensorflow.org/api_docs/python/tf/keras/datasets"
+    type = None
+    dataset_name = None
 
     keras_datasets = {
         "MNIST": datasets.mnist,
@@ -167,10 +172,18 @@ class KerasDatasetBatchLoader(_BatchLoader):
                 ButtonParameter("reload", self.reload, "Reload dataset")]
 
     def update_parameters(self):
+        dataset_name = self.parameters["dataset"].get()
+        type = self.parameters["type"].get()
         epochs = self.parameters["epochs"].get()
         batch_size = self.parameters["batch_size"].get()
         should_reload = False
 
+        if self.dataset_name != dataset_name:
+            self.dataset_name = dataset_name
+            should_reload = True
+        if self.type != type:
+            self.type = type
+            should_reload = True
         if self.batch_size != batch_size:
             self.batch_size = batch_size
             should_reload = True
@@ -178,11 +191,8 @@ class KerasDatasetBatchLoader(_BatchLoader):
         return should_reload
 
     def generate_dataset(self):
-        type = self.parameters["type"].get()       # train or test type of dataset
-        dataset_key = self.parameters["dataset"].get()
-        dataset = self.keras_datasets.get(dataset_key)
-
-        self.dataset = dataset.load_data()[type]
+        dataset = self.keras_datasets.get(self.dataset_name)
+        self.dataset = dataset.load_data()[self.type]
         self.number_of_batches = math.ceil(len(self.dataset[0]) / self.batch_size)
 
     def get_next_batch(self):
