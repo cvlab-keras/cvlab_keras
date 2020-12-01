@@ -107,19 +107,19 @@ class PredictionDecoder(NormalElement):
 
     def process_inputs(self, inputs, outputs, parameters):
         prediction = inputs["prediction"].value
-        prediction = prediction[0] if prediction.ndim > 1 else prediction  # take prediction for first image
+        prediction = prediction[0] if prediction.ndim > 1 else prediction  # take first prediction
         labels = inputs["labels"].value
         top_n = parameters["top"]
 
         if prediction is not None and labels is not None:
-            labels_probabilities = sorted(zip(labels, prediction), key=lambda item: item[1], reverse=True)
-            labels, prediction = zip(*labels_probabilities)
-            formatted_prediction = PredictionDecoder.format_decoded_prediction(prediction, labels, top_n)
+            labeled_probabilities = sorted(zip(labels, prediction), key=lambda item: item[1], reverse=True)
+            labels, prediction = zip(*labeled_probabilities)
+            formatted_prediction = self.format_decoded_prediction(prediction, labels, top_n)
             outputs["decoded"] = Data(formatted_prediction)
 
     @staticmethod
     def format_decoded_prediction(prediction, labels, top_n):
-        layout_base = '{:4} {:16.16} '  # number column is 4 chars wide and name one is 16 (cropping to long names)
+        layout_base = '{:4} {:16.16} '  # number column is 4 chars wide and name column is 16 (cropping too long names)
         header = layout_base + '{:6}'  # 6 characters for probabilities title
         layout = layout_base + '{:0.4f}'  # display 4 decimal places of probability value
         formatted = header.format('no.', 'label', 'prob.') + '\n'
