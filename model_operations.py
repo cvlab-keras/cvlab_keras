@@ -13,8 +13,8 @@ class Predict(NormalElement):
     activation_model = None
 
     def get_attributes(self):
-        return [Input("model", name="model"), Input("image", name="image")], \
-               [Output("predictions", name="predictions", preview_enabled=False),
+        return [Input("model"), Input("image")], \
+               [Output("predictions", preview_enabled=False),
                 Output("name", name="layer name", preview_only=True),
                 Output("activation", name="activation images", preview_only=True)], \
                [IntParameter("layer", name="layer index", value=0, min_=0),
@@ -93,7 +93,7 @@ class PredictionDecoder(NormalElement):
     comment = 'Maps probabilistic prediction to labels'
 
     def get_attributes(self):
-        return [Input("prediction", name="prediction"), Input("labels", name="labels")], \
+        return [Input("prediction"), Input("labels")], \
                [Output("decoded", name="decoded prediction", preview_only=True)], \
                [IntParameter("top", "top n probabilities", value=5, min_=1)]
 
@@ -137,8 +137,8 @@ class ModelTraining(NormalElement):
         self.model = None
 
     def get_attributes(self):
-        return [Input("model"), Input("images", name="images"), Input("labels", name="labels")], \
-               [Output("metrics", name="metrics"),
+        return [Input("model"), Input("images"), Input("labels")], \
+               [Output("metrics"),
                 Output("model", name="trained model")], []
 
     def get_processing_units(self, inputs, parameters):
@@ -157,7 +157,7 @@ class ModelTraining(NormalElement):
             self.labels = labels
             self.model = model
 
-            images = np.array([image.value for image in batch])
+            images = np.array([data.value for data in batch])
             if images.ndim == 3:
                 images = np.expand_dims(images, axis=3)     # add one axis for grayscale images
 
@@ -165,7 +165,10 @@ class ModelTraining(NormalElement):
             outputs["metrics"] = Data(result)
             outputs["model"] = Data(model)
 
-            self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
+            self.notify_batch_processing_finished()
+
+    def notify_batch_processing_finished(self):
+        self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
 
 
 register_elements("Model operations", [Predict, PredictionDecoder, ModelTraining], 1)
