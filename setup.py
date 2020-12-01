@@ -8,7 +8,7 @@ from setuptools import find_packages
 from glob import glob
 
 
-def add_package(package_data, package_name, extensions):
+def add_package(package_data, package_name, extensions):        # TODO (keras) make sure if it is necessary in the plugin
     files = glob(package_name + "/**", recursive=True)
     files = list(map(lambda x: x[len(package_name)+1:].replace("\\", "/"), files))
     files = [f for f in files if any(f.endswith(e) for e in extensions)]
@@ -19,7 +19,7 @@ def find_package_data():
     package_data = {}
 
     packages = glob("cvlab_*/__init__.py")
-    extensions = [".cvlab", ".jpg", ".png", ".dcm", ".json", ".bmp", ".h5"]
+    extensions = [".cvlab", ".jpg", ".png", ".dcm", ".json", ".bmp", ".h5"]     # TODO (keras) what's the function of these extensions? should we add also txt?
 
     for package_name in packages:
         package_name = package_name.replace("\\", "/").split("/")[0]
@@ -34,7 +34,7 @@ if sys.version_info.major <= 2:
 
 requirements = [
     "cvlab>=1.2",
-    "tensorflow",
+    "tensorflow",       # TODO (keras) add required version at the end
 ]
 
 
