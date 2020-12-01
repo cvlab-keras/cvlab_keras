@@ -86,21 +86,22 @@ class _BatchLoader(InputElement):
 
 class BatchLoaderFromFile(_BatchLoader):
     name = "File image batch loader"
-    comment = "Loads batches of images with labels from TXT file\n" \
-              "File should contain one line per image in format <path_to_image image_class>"
+    comment = "Loads batches of images with labels from text file.\n" \
+              "File should contain one line per image in format <path_to_image image_class>." \
+              "For the most efficient processing set the batch size to the power of 2."
 
     def get_attributes(self):
         return [],\
                [Output("images"), Output("labels", preview_enabled=False), Output("classes", preview_enabled=False)], \
                [PathParameter("file", name="file (.txt)", value="", extension_filter=TXT_FILTER),
                 IntParameter("epochs", value=1, min_=1, max_=100),
-                IntParameter("batch size", value=4, min_=1, max_=2048),
+                IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
                 ButtonParameter("reload", self.reload, "Reload dataset")]
 
     def update_parameters(self):
         path = self.parameters["file"].get()
         epochs = self.parameters["epochs"].get()
-        batch_size = self.parameters["batch size"].get()
+        batch_size = self.parameters["batch_size"].get()
         should_reload = False
 
         if self.path != path:
@@ -115,23 +116,23 @@ class BatchLoaderFromFile(_BatchLoader):
 
     def generate_dataset(self):
         with open(self.path) as file:
-            images = [line.rstrip().split(" ") for line in file]
+            labeled_image_paths = [line.rstrip().split(" ") for line in file]
 
-        shuffle(images)  # randomize order of images
-        self.dataset = images
+        shuffle(labeled_image_paths)  # randomize order of images
+        self.dataset = labeled_image_paths
         self.number_of_batches = math.ceil(len(self.dataset) / self.batch_size)
 
     def get_next_batch(self):
         start = self.total_batches_sent % self.number_of_batches * self.batch_size
         end = start + self.batch_size
-        images_list = self.dataset[start:end]
+        labeled_image_paths = self.dataset[start:end]
 
         images = []
         labels = []
-        for image in images_list:
+        for image_path, label in labeled_image_paths:
             try:
-                images.append(plt.imread(image[0]))
-                labels.append(image[1])
+                images.append(plt.imread(image_path))
+                labels.append(label)
             except SyntaxError:  # not a PNG file exception
                 continue        # TODO (keras) check if throws any other types of exceptions
         return images, labels
@@ -144,7 +145,9 @@ class BatchLoaderFromFile(_BatchLoader):
 
 class KerasDatasetBatchLoader(_BatchLoader):
     name = "Built-in datasets loader"
-    comment = "Loads train or test dataset from keras built-in image datasets."
+    comment = "Loads train or test dataset from keras built-in image datasets.\n" \
+              "For the most efficient processing set the batch size to the power of 2.\n" \
+              "For more information see https://www.tensorflow.org/api_docs/python/tf/keras/datasets"
 
     keras_datasets = {
         "MNIST": datasets.mnist,
@@ -160,12 +163,12 @@ class KerasDatasetBatchLoader(_BatchLoader):
                [ComboboxParameter("dataset", dataset_names),
                 ComboboxParameter("type", {"train": 0, "test": 1}),
                 IntParameter("epochs", value=1, min_=1, max_=100),
-                IntParameter("batch size", value=4, min_=1, max_=2048),
+                IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
                 ButtonParameter("reload", self.reload, "Reload dataset")]
 
     def update_parameters(self):
         epochs = self.parameters["epochs"].get()
-        batch_size = self.parameters["batch size"].get()
+        batch_size = self.parameters["batch_size"].get()
         should_reload = False
 
         if self.batch_size != batch_size:
