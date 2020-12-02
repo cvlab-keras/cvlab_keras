@@ -17,25 +17,21 @@ class _ModelFromDiskLoader(NormalElement):
 
     def __init__(self):
         super().__init__()
-        self.path = None
         self.do_load = False
 
     def get_attributes_with_path(self, path_parameter):
-        return [], [Output("output", name="output (model)")], \
+        return [], [Output("model", name="model")], \
                [path_parameter,
-                ButtonParameter("load", self.load, "load")]
+                ButtonParameter("load", self.load, "Load")]
 
     def process_inputs(self, inputs, outputs, parameters):
-        new_path = parameters["path"]
+        path = parameters["path"]
 
-        if self.path != new_path:
-            self.path = new_path
-
-        if self.do_load and self.path != "":
+        if self.do_load and path != "":
             self.do_load = False
             self.may_interrupt()
-            model: models.Model = models.load_model(self.path)
-            outputs["output"] = Data(model)
+            model: models.Model = models.load_model(path)
+            outputs["model"] = Data(model)
 
     def load(self):
         self.do_load = True
@@ -69,29 +65,21 @@ class _ModelToDiskSaver(NormalElement):
 
     def __init__(self):
         super().__init__()
-        self.path = None
-        self.model = None
         self.do_save = False
 
     def get_attributes_with_path(self, path_parameter):
-        return [Input("input", name="input (model)")], [], \
+        return [Input("model", name="model")], [], \
                [path_parameter,
-                ButtonParameter("save", self.save, "save")]
+                ButtonParameter("save", self.save, "Save")]
 
     def process_inputs(self, inputs, outputs, parameters):
-        new_path = parameters["path"]
-        new_model = inputs["input"].value
+        path = parameters["path"]
+        model = inputs["model"].value
 
-        if self.path != new_path:
-            self.path = new_path
-
-        if self.model != new_model:
-            self.model = new_model
-
-        if self.do_save and self.model is not None and self.path != "":
+        if self.do_save and model is not None and path != "":
             self.do_save = False
             self.may_interrupt()
-            models.save_model(self.model, self.path)
+            models.save_model(model, path)
 
     def save(self):
         self.do_save = True
@@ -146,45 +134,35 @@ class PretrainedModelLoader(NormalElement):
     def __init__(self):
         super().__init__()
         self.do_load = False
-        self.model_key = None
-        self.has_top = None
-        self.weights = None
-        self.input_width = None
-        self.input_height = None
 
     def get_attributes(self):
         # because model constructors are not JSON serializable we use workaround dictionary with key:key
         duplicate_key_dictionary = {key: key for key in self.model_constructor_dictionary.keys()}
         return [], \
-               [Output("output", name="model")], \
+               [Output("model", name="model")], \
                [ComboboxParameter("model", duplicate_key_dictionary),
                 ComboboxParameter("top", [("no", False), ("yes", True)], "include top"),
                 ComboboxParameter("weights", [("pre-trained - ImageNet", 'imagenet'), ("random", None)]),
                 IntParameter("height", name="input height", value=224, min_=32),
                 IntParameter("width", name="input width", value=224, min_=32),
-                ButtonParameter("load", self.load)]
+                ButtonParameter("load", self.load, "Load")]
 
     def process_inputs(self, inputs, outputs, parameters):
-        if self.model_key != parameters["model"]:
-            self.model_key = parameters["model"]
-        if self.has_top != parameters["top"]:
-            self.has_top = parameters["top"]
-        if self.weights != parameters["weights"]:
-            self.weights = parameters["weights"]
-        if self.input_width != parameters["width"]:
-            self.input_width = parameters["width"]
-        if self.input_height != parameters["height"]:
-            self.input_height = parameters["height"]
+        model_key = parameters["model"]
+        has_top = parameters["top"]
+        weights = parameters["weights"]
+        input_width = parameters["width"]
+        input_height = parameters["height"]
 
         if self.do_load:
             self.do_load = False
             self.may_interrupt()
-            model_constructor = self.model_constructor_dictionary.get(self.model_key)
+            model_constructor = self.model_constructor_dictionary.get(model_key)
             # Passing shape as None, when top is included, results with required (for classifier) input shape being used
-            shape = None if self.has_top else (self.input_height, self.input_width, 3)  # all models require 3 channels
+            shape = None if has_top else (input_height, input_width, 3)  # all models require 3 channels
 
-            model = model_constructor(include_top=self.has_top, weights=self.weights, input_shape=shape)
-            outputs["output"] = Data(model)
+            model = model_constructor(include_top=has_top, weights=weights, input_shape=shape)
+            outputs["model"] = Data(model)
 
     def load(self):
         self.do_load = True
