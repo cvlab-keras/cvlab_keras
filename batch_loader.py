@@ -1,5 +1,5 @@
 from cvlab.diagram.elements.base import *
-from tensorflow.keras import datasets, utils
+from tensorflow import keras
 
 import matplotlib.pyplot as plt
 from random import shuffle
@@ -16,13 +16,38 @@ class _BatchLoader(InputElement):
         self.batch_size = None
         self.epochs = None
         self.total_batches_sent = 0
-        self.target_size = None
-        self.color_mode = None
         self.number_of_batches = None
         self.dataset = None
         self.path = None
         self.classes = None
+        self.to_categorical = True
         self.batch_notifier = threading.Event()
+
+    def get_attributes(self):
+        """Returns common attributes for all batch loaders"""
+        return [], \
+               [Output("images"),
+                Output("labels", name="batch labels", preview_enabled=False),
+                Output("classes", name="all labels", preview_enabled=False)], \
+               [IntParameter("epochs", value=1, min_=1, max_=100),
+                IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
+                ComboboxParameter("to_categorical", name="to categorical", values=[("Yes", True), ("No", False)]),
+                ButtonParameter("reload", self.reload, "Reload dataset")]
+
+    def update_parameters(self):
+        """Updates values of parameters and returns True if dataset needs to be reloaded"""
+        epochs = self.parameters["epochs"].get()
+        batch_size = self.parameters["batch_size"].get()
+        to_categorical = self.parameters["to_categorical"].get()
+        should_reload = False
+
+        if self.batch_size != batch_size:
+            self.batch_size = batch_size
+            should_reload = True
+        self.to_categorical = to_categorical
+        self.epochs = epochs
+
+        return should_reload
 
     def recalculate(self, refresh_parameters, refresh_structure, force_break, force_units_recalc=False):
         self.batch_notifier.set()
@@ -51,17 +76,14 @@ class _BatchLoader(InputElement):
         """Generates new set of data"""
         pass
 
-    def update_parameters(self):
-        """Sets new values of parameters"""
-        pass
-
     def send_batches(self):
         while self.total_batches_sent < self.number_of_batches * self.epochs:
             self.set_state(Element.STATE_BUSY)
             self.may_interrupt()
             images, labels = self.get_next_batch()
             image_sequence = Sequence([Data(image) for image in images])
-            labels = utils.to_categorical(labels, len(self.classes))    # TODO (keras) move it to separate element
+            if self.to_categorical:
+                labels = keras.utils.to_categorical(labels, len(self.classes))    # TODO (keras) move it to separate element
             label_sequence = Data(labels)
 
             self.set_state(Element.STATE_READY)
@@ -85,45 +107,17 @@ class _BatchLoader(InputElement):
         return
 
 
-class BatchLoaderFromFile(_BatchLoader):
-    name = "File image batch loader"
-    comment = "Loads batches of images with labels from text file.\n" \
-              "File should contain one line per image in format <path_to_image image_class>." \
-              "For the most efficient processing set the batch size to the power of 2."
-
-    def get_attributes(self):
-        return [],\
-               [Output("images"),
-                Output("labels", name="batch labels", preview_enabled=False),
-                Output("classes", name="all labels", preview_enabled=False)], \
-               [PathParameter("file", name="file (.txt)", value="", extension_filter=TXT_FILTER),
-                IntParameter("epochs", value=1, min_=1, max_=100),
-                IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
-                ButtonParameter("reload", self.reload, "Reload dataset")]
-
+class _BatchLoaderFromDisk(_BatchLoader):
+    """Base element for loading data from disk. Deriving elements should contain path parameter."""
     def update_parameters(self):
-        path = self.parameters["file"].get()
-        epochs = self.parameters["epochs"].get()
-        batch_size = self.parameters["batch_size"].get()
+        path = self.parameters["path"].get()
         should_reload = False
 
         if self.path != path:
             self.path = path
             should_reload = True
-        if self.batch_size != batch_size:
-            self.batch_size = batch_size
-            should_reload = True
-        self.epochs = epochs
 
-        return should_reload
-
-    def generate_dataset(self):
-        with open(self.path) as file:
-            labeled_image_paths = [line.rstrip().split(" ") for line in file]
-
-        shuffle(labeled_image_paths)  # randomize order of images
-        self.dataset = labeled_image_paths
-        self.number_of_batches = math.ceil(len(self.dataset) / self.batch_size)
+        return _BatchLoader.update_parameters(self) or should_reload
 
     def get_next_batch(self):
         start = self.total_batches_sent % self.number_of_batches * self.batch_size
@@ -146,6 +140,52 @@ class BatchLoaderFromFile(_BatchLoader):
         return classes
 
 
+class BatchLoaderFromFile(_BatchLoaderFromDisk):
+    name = "File image batch loader"
+    comment = "Loads batches of images with labels from text file.\n" \
+              "File should contain one line per image in format <path_to_image image_class>." \
+              "For the most efficient processing set the batch size to the power of 2."
+
+    def get_attributes(self):
+        base_inputs, base_outputs, base_params = super().get_attributes()
+        parameters = [PathParameter("path", name="file (.txt)", value="", extension_filter=TXT_FILTER)] + base_params
+        return base_inputs, base_outputs, parameters
+
+    def generate_dataset(self):
+        with open(self.path) as file:
+            labeled_image_paths = [line.rstrip().split(" ") for line in file]
+
+        shuffle(labeled_image_paths)  # randomize order of images
+        self.dataset = labeled_image_paths
+        self.number_of_batches = math.ceil(len(self.dataset) / self.batch_size)
+
+
+class BatchLoaderFromDirectory(_BatchLoaderFromDisk):
+    name = "Directory image batch loader"
+    comment = "Loads batches of images with labels from text file.\n" \
+              "Target directory should contain one subdirectory per class.\n" \
+              "For the most efficient processing set the batch size to the power of 2."
+
+    def get_attributes(self):
+        base_inputs, base_outputs, base_params = super().get_attributes()
+        new_params = [DirectoryParameter("path", name="directory path", value="")]
+        parameters = new_params + base_params
+        return base_inputs, base_outputs, parameters
+
+    def generate_dataset(self):
+        labeled_image_paths = []
+        subdirectories_paths = [f.path for f in os.scandir(self.path) if f.is_dir()]
+        for sub_path in subdirectories_paths:
+            label = os.path.basename(sub_path)  # name of subdirectory indicates image's label
+            for root, dirs, files in os.walk(sub_path):
+                for file in files:
+                    labeled_image_paths.append([os.path.join(root, file), label])
+
+        shuffle(labeled_image_paths)  # randomize order of images
+        self.dataset = labeled_image_paths
+        self.number_of_batches = math.ceil(len(self.dataset) / self.batch_size)
+
+
 class KerasDatasetBatchLoader(_BatchLoader):
     name = "Built-in datasets loader"
     comment = "Loads train or test dataset from keras built-in image datasets.\n" \
@@ -155,27 +195,22 @@ class KerasDatasetBatchLoader(_BatchLoader):
     dataset_name = None
 
     keras_datasets = {
-        "MNIST": datasets.mnist,
-        "CIFAR10": datasets.cifar10,
-        "CIFAR100": datasets.cifar100,
-        "Fashion MNIST": datasets.fashion_mnist
+        "MNIST": keras.datasets.mnist,
+        "CIFAR10": keras.datasets.cifar10,
+        "CIFAR100": keras.datasets.cifar100,
+        "Fashion MNIST": keras.datasets.fashion_mnist
     }
 
     def get_attributes(self):
         dataset_names = {key: key for key in self.keras_datasets.keys()}
-        return [], \
-               [Output("images"), Output("labels", preview_enabled=False), Output("classes", preview_enabled=False)], \
-               [ComboboxParameter("dataset", dataset_names),
-                ComboboxParameter("type", {"train": 0, "test": 1}),
-                IntParameter("epochs", value=1, min_=1, max_=100),
-                IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
-                ButtonParameter("reload", self.reload, "Reload dataset")]
+        base_inputs, base_outputs, base_params = super().get_attributes()
+        new_params = [ComboboxParameter("dataset", dataset_names), ComboboxParameter("type", {"train": 0, "test": 1})]
+        parameters = new_params + base_params
+        return base_inputs, base_outputs, parameters
 
     def update_parameters(self):
         dataset_name = self.parameters["dataset"].get()
         type = self.parameters["type"].get()
-        epochs = self.parameters["epochs"].get()
-        batch_size = self.parameters["batch_size"].get()
         should_reload = False
 
         if self.dataset_name != dataset_name:
@@ -184,11 +219,8 @@ class KerasDatasetBatchLoader(_BatchLoader):
         if self.type != type:
             self.type = type
             should_reload = True
-        if self.batch_size != batch_size:
-            self.batch_size = batch_size
-            should_reload = True
-        self.epochs = epochs
-        return should_reload
+
+        return super().update_parameters() or should_reload
 
     def generate_dataset(self):
         dataset = self.keras_datasets.get(self.dataset_name)
@@ -213,4 +245,4 @@ class KerasDatasetBatchLoader(_BatchLoader):
         return classes
 
 
-register_elements("Image batch loading", [BatchLoaderFromFile, KerasDatasetBatchLoader], 20)
+register_elements("Image batch loading", [BatchLoaderFromFile, BatchLoaderFromDirectory, KerasDatasetBatchLoader], 20)
