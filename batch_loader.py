@@ -117,7 +117,7 @@ class _BatchLoaderFromDisk(_BatchLoader):
             self.path = path
             should_reload = True
 
-        return _BatchLoader.update_parameters(self) or should_reload
+        return super().update_parameters() or should_reload
 
     def get_next_batch(self):
         start = self.total_batches_sent % self.number_of_batches * self.batch_size
@@ -147,8 +147,9 @@ class BatchLoaderFromFile(_BatchLoaderFromDisk):
               "For the most efficient processing set the batch size to the power of 2."
 
     def get_attributes(self):
-        base_inputs, base_outputs, base_params = super().get_attributes()
-        parameters = [PathParameter("path", name="file (.txt)", value="", extension_filter=TXT_FILTER)] + base_params
+        base_inputs, base_outputs, base_parameters = super().get_attributes()
+        new_parameters = [PathParameter("path", name="file (.txt)", value="", extension_filter=TXT_FILTER)]
+        parameters = new_parameters + base_parameters
         return base_inputs, base_outputs, parameters
 
     def generate_dataset(self):
@@ -162,14 +163,14 @@ class BatchLoaderFromFile(_BatchLoaderFromDisk):
 
 class BatchLoaderFromDirectory(_BatchLoaderFromDisk):
     name = "Directory image batch loader"
-    comment = "Loads batches of images with labels from text file.\n" \
+    comment = "Loads batches of images from directory.\n" \
               "Target directory should contain one subdirectory per class.\n" \
               "For the most efficient processing set the batch size to the power of 2."
 
     def get_attributes(self):
-        base_inputs, base_outputs, base_params = super().get_attributes()
-        new_params = [DirectoryParameter("path", name="directory path", value="")]
-        parameters = new_params + base_params
+        base_inputs, base_outputs, base_parameters = super().get_attributes()
+        new_parameters = [DirectoryParameter("path", name="directory path", value="")]
+        parameters = new_parameters + base_parameters
         return base_inputs, base_outputs, parameters
 
     def generate_dataset(self):
@@ -203,9 +204,9 @@ class KerasDatasetBatchLoader(_BatchLoader):
 
     def get_attributes(self):
         dataset_names = {key: key for key in self.keras_datasets.keys()}
-        base_inputs, base_outputs, base_params = super().get_attributes()
+        base_inputs, base_outputs, base_parameters = super().get_attributes()
         new_params = [ComboboxParameter("dataset", dataset_names), ComboboxParameter("type", {"train": 0, "test": 1})]
-        parameters = new_params + base_params
+        parameters = new_params + base_parameters
         return base_inputs, base_outputs, parameters
 
     def update_parameters(self):
