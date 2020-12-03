@@ -4,9 +4,9 @@ from cvlab.diagram.elements.base import *
 from cvlab_keras.model_operations import PredictionDecoder
 
 
-class ImageNetPredictionsDecoder(NormalElement):
-    name = 'ImageNet predictions decoder'
-    comment = 'Decodes ImageNet probabilistic predictions into class names'
+class ImageNetPredictionDecoder(NormalElement):
+    name = 'ImageNet prediction decoder'
+    comment = 'Decodes ImageNet probabilistic prediction into class names'
 
     def get_attributes(self):
         return [Input("prediction", name="prediction")], \
