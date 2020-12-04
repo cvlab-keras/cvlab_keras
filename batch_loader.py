@@ -1,11 +1,15 @@
 from cvlab.diagram.elements.base import *
 from tensorflow import keras
-
+from PIL import UnidentifiedImageError
 import matplotlib.pyplot as plt
 from random import shuffle
 import math
 
 TXT_FILTER = "TXT (*.txt)"
+
+
+def list_to_dict(lst):
+    return {k: v for v, k in enumerate(lst)}
 
 
 class _BatchLoader(InputElement):
@@ -68,8 +72,8 @@ class _BatchLoader(InputElement):
         if should_regenerate_dataset:
             self.total_batches_sent = 0
             self.generate_dataset()
-            self.classes = self.get_classes()
-            self.outputs["classes"].put(Data(self.classes))
+            self.classes = list_to_dict(self.get_classes())   # classes are stored as pairs (class name: index)
+            self.outputs["classes"].put(Data(self.classes.keys()))
         self.send_batches()
 
     def generate_dataset(self):
@@ -82,8 +86,10 @@ class _BatchLoader(InputElement):
             self.may_interrupt()
             images, labels = self.get_next_batch()
             image_sequence = Sequence([Data(image) for image in images])
+            labels = [self.classes[label] for label in labels]  # get index for each class from class dictionary
             if self.to_categorical:
-                labels = keras.utils.to_categorical(labels, len(self.classes))    # TODO (keras) move it to separate element
+                # converts a class vector to binary class matrix
+                labels = keras.utils.to_categorical(labels, len(self.classes))
             label_sequence = Data(labels)
 
             self.set_state(Element.STATE_READY)
@@ -130,8 +136,8 @@ class _BatchLoaderFromDisk(_BatchLoader):
             try:
                 images.append(plt.imread(image_path))
                 labels.append(label)
-            except SyntaxError:  # not a PNG file exception
-                continue        # TODO (keras) check if throws any other types of exceptions
+            except (SyntaxError, UnidentifiedImageError):  # plt.imread() file exception (f.e. not a PNG file exception)
+                continue
         return images, labels
 
     def get_classes(self):
@@ -233,16 +239,16 @@ class KerasDatasetBatchLoader(_BatchLoader):
         end = start + self.batch_size
         images = self.dataset[0][start:end]
         labels = self.dataset[1][start:end]
+        if labels.ndim != 1:
+            labels = np.squeeze(labels, axis=1)
         return images, labels
 
     def get_classes(self):
         classes = self.dataset[1]
-        if len(classes.shape) != 1:
+        if classes.ndim != 1:
             classes = np.squeeze(classes, axis=1)
-
-        classes = list(set(classes))  # get unique values
-        classes = [str(cl) for cl in classes]
-        classes.sort()
+        classes = list(set(list(classes)))  # get unique values
+        classes.sort(key=lambda cl: str(cl))   # making sure that classes are in alphanumerical order
         return classes
 
 
