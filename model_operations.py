@@ -48,7 +48,6 @@ class Predict(NormalElement):
                 self.outputs["predictions"].put(Data(activation[-1]))  # predictions - output of the last layer
                 self.outputs["name"].put(Data("layer: " + self.activation_model.layers[layer_index].name))
                 self.outputs["activation"].put(Data(final_image))
-                print("predicted", activation[-1])
 
             except ValueError as e:
                 raise ValueError(self.msg_without_stacktrace(e.__str__(), "ValueError"))  # invalid shape for predict
@@ -107,7 +106,6 @@ class PredictionDecoder(NormalElement):
             labels, prediction = zip(*labeled_probabilities)
             formatted_prediction = self.format_decoded_prediction(prediction, labels, top_n)
             self.outputs["decoded"].put(Data(formatted_prediction))
-            print("decoded")
 
     @staticmethod
     def format_decoded_prediction(prediction, labels, top_n):
