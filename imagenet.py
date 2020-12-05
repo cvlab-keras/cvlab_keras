@@ -1,33 +1,27 @@
 from tensorflow.keras.applications import imagenet_utils
 
 from cvlab.diagram.elements.base import *
+from cvlab_keras.model_operations import PredictionDecoder
 
 
-class ImageNetPredictionsDecoder(NormalElement):
-    name = 'ImageNet predictions decoder'
-    comment = 'Decodes ImageNet probabilistic predictions into class names'
+class ImageNetPredictionDecoder(NormalElement):
+    name = 'ImageNet prediction decoder'
+    comment = 'Decodes ImageNet probabilistic prediction into class names'
 
     def get_attributes(self):
-        return [Input("predictions", name="predictions")], \
-               [Output("decoded", name="decoded predictions", preview_only=True)], \
-               [IntParameter("top", "top n predictions", value=5, min_=1, max_=1000)]
+        return [Input("prediction", name="prediction")], \
+               [Output("decoded", name="decoded prediction", preview_only=True)], \
+               [IntParameter("top", "top n probabilities", value=5, min_=1, max_=1000)]
 
     def process_inputs(self, inputs, outputs, parameters):
-        predictions = inputs["predictions"].value
-        top_number = parameters["top"]
+        predictions = inputs["prediction"].value
+        top_n = parameters["top"]
 
         if predictions is not None:
-            decoded = imagenet_utils.decode_predictions(predictions, top_number)
-            layout_base = '{:4} {:16.16} '  # number column is 4 chars wide and name one is 16 (cropping to long names)
-            header = layout_base+'{:6}'     # 6 characters for probabilities title
-            layout = layout_base+'{:0.4f}'  # display 4 decimal places of probability value
-            output_string = header.format('no.', 'name', 'prob.') + '\n'
-            for i in range(0, top_number):
-                _, name, probability = decoded[0][i]
-                output_string += layout.format(str(i+1)+'.', name, round(probability, 4))
-                output_string += '\n' if i != top_number-1 else ''  # don't add endline in the last line
-
-            outputs["decoded"] = Data(output_string)
+            decoded = imagenet_utils.decode_predictions(predictions, top_n)
+            _, labels, prediction = zip(*decoded[0])
+            formatted = PredictionDecoder.format_decoded_prediction(prediction, labels, top_n)
+            outputs["decoded"] = Data(formatted)
 
 
 class ImageNetInputPreprocessor(NormalElement):

@@ -1,5 +1,3 @@
-import tensorflow
-
 from tensorflow.keras import models
 from math import ceil
 
@@ -15,8 +13,8 @@ class Predict(NormalElement):
     activation_model = None
 
     def get_attributes(self):
-        return [Input("model", name="model"), Input("image", name="image")], \
-               [Output("predictions", name="predictions", preview_enabled=False),
+        return [Input("model"), Input("image")], \
+               [Output("predictions", preview_enabled=False),
                 Output("name", name="layer name", preview_only=True),
                 Output("activation", name="activation images", preview_only=True)], \
                [IntParameter("layer", name="layer index", value=0, min_=0),
@@ -28,13 +26,11 @@ class Predict(NormalElement):
         image: np.ndarray = inputs["image"].value
 
         if model != self.model:  # change activation model only if new model is given
-            self.may_interrupt()
             self.model = model
             layer_outputs = [layer.output for layer in self.model.layers]
             self.activation_model = models.Model(inputs=self.model.input, outputs=layer_outputs)
 
         if model is not None and image is not None:
-            self.may_interrupt()
             try:
                 if image.ndim == 2:  # expand image dimensions for convolution layers
                     image = np.expand_dims(image, axis=2)
@@ -49,9 +45,9 @@ class Predict(NormalElement):
                 spacing = parameters["spacing"]
                 final_image = self.create_activation_images(activation[layer_index], imgs_in_row, spacing)
 
-                outputs["predictions"] = Data(activation[-1])  # predictions - output of the last layer
-                outputs["name"] = Data("layer: " + self.activation_model.layers[layer_index].name)
-                outputs["activation"] = Data(final_image)
+                self.outputs["predictions"].put(Data(activation[-1]))  # predictions - output of the last layer
+                self.outputs["name"].put(Data("layer: " + self.activation_model.layers[layer_index].name))
+                self.outputs["activation"].put(Data(final_image))
 
             except ValueError as e:
                 raise ValueError(self.msg_without_stacktrace(e.__str__(), "ValueError"))  # invalid shape for predict
@@ -90,4 +86,95 @@ class Predict(NormalElement):
         return final_msg
 
 
-register_elements_auto(__name__, locals(), "Model operations", 1)
+class PredictionDecoder(NormalElement):
+    name = 'Prediction decoder'
+    comment = 'Maps probabilistic prediction to labels'
+
+    def get_attributes(self):
+        return [Input("prediction"), Input("labels")], \
+               [Output("decoded", name="decoded prediction", preview_only=True)], \
+               [IntParameter("top", "top n probabilities", value=5, min_=1)]
+
+    def process_inputs(self, inputs, outputs, parameters):
+        prediction = inputs["prediction"].value
+        labels = inputs["labels"].value
+        top_n = parameters["top"]
+
+        if prediction is not None and labels is not None:
+            prediction = prediction[0] if prediction.ndim > 1 else prediction  # take first prediction
+            labeled_probabilities = sorted(zip(labels, prediction), key=lambda item: item[1], reverse=True)
+            labels, prediction = zip(*labeled_probabilities)
+            formatted_prediction = self.format_decoded_prediction(prediction, labels, top_n)
+            self.outputs["decoded"].put(Data(formatted_prediction))
+
+    @staticmethod
+    def format_decoded_prediction(prediction, labels, top_n):
+        layout_base = '{:4} {:16.16} '  # number column is 4 chars wide and name column is 16 (cropping too long names)
+        header = layout_base + '{:6}'  # 6 characters for probabilities title
+        layout = layout_base + '{:0.4f}'  # display 4 decimal places of probability value
+        formatted = header.format('no.', 'label', 'prob.') + '\n'
+
+        top_lim = top_n if top_n <= len(prediction) else len(prediction)  # limit top_n to number of probabilities
+        for i in range(0, top_lim):
+            index = str(i + 1) + '.'
+            label = labels[i]
+            probability = prediction[i]
+            formatted += layout.format(index, str(label), probability)
+            formatted += '\n' if i != top_lim - 1 else ''  # don't add endline in the last line
+        return formatted
+
+
+class ModelTraining(NormalElement):
+    name = 'Model training'
+    comment = 'Performs single train step on batch of data.' \
+              'Parameter "step" defines how often the trained model should be sent to next elements.'
+
+    def __init__(self):
+        super(ModelTraining, self).__init__()
+        self.batch = None
+        self.labels = None
+        self.model = None
+        self.counter = 0
+
+    def get_attributes(self):
+        return [Input("model"), Input("images"), Input("labels")], \
+               [Output("metrics"),
+                Output("model", name="trained model")], \
+               [IntParameter("step", value=1, min_=1, max_=100)]
+
+    def get_processing_units(self, inputs, parameters):
+        """Desequences input data"""
+        outputs = {name: Data() for name in self.outputs}
+        units = [ProcessingUnit(self, inputs, parameters, outputs)]
+        return units, outputs
+
+    def process_inputs(self, inputs, outputs, parameters):
+        model = inputs["model"].value
+        labels = inputs["labels"].value
+        batch = inputs["images"]
+        step = parameters["step"]
+
+        if model is not None and batch.is_complete() and (model != self.model or batch != self.batch):
+            self.batch = batch
+            self.labels = labels
+            self.model = model
+
+            # unpacked values from sequence are returned as list, we need to convert them after that to numpy array
+            images = np.array(batch.desequence_all())
+            if images.ndim == 3:
+                images = np.expand_dims(images, axis=3)     # add one axis for grayscale images
+            images = images.astype(dtype='float32')
+
+            result = self.model.train_on_batch(images, labels, return_dict=True)
+
+            self.outputs["metrics"].put(Data(result))
+            if self.counter % step == 0:        # send trained model every x steps
+                self.outputs["model"].put(Data(self.model))
+            self.counter += 1
+            self.notify_batch_processing_finished()
+
+    def notify_batch_processing_finished(self):
+        self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
+
+
+register_elements_auto(__name__, locals(), "Model operations",  1)
