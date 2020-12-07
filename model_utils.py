@@ -41,7 +41,7 @@ def set_model(action_image, model: Model):
     line_count = model_string.count('\n')
     if line_count > model_size_lim:  # for largest models display few first and last layers
         end_lines_count = 10
-        start_lines_index = model_size_lim - end_lines_count  # multiply by 2 to take line separators into account
+        start_lines_index = model_size_lim - end_lines_count
         end_lines_index = line_count - end_lines_count  # last few lines
         remaining_lines_count = line_count - start_lines_index - end_lines_count
 
