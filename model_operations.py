@@ -2,6 +2,7 @@ from tensorflow.keras import models
 from math import ceil
 
 from cvlab.diagram.elements.base import *
+from cvlab_keras.model_utils import model_to_image
 
 
 class Predict(NormalElement):
@@ -175,6 +176,21 @@ class ModelTraining(NormalElement):
 
     def notify_batch_processing_finished(self):
         self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
+
+
+class ModelToImage(NormalElement):
+    name = 'Model to image'
+    comment = 'Plots model to graphical representation\n' \
+              'Requires Pydot module to work'
+
+    def get_attributes(self):
+        return [Input("model")], [Output("image")], []
+
+    def process_inputs(self, inputs, outputs, parameters):
+        model = inputs["model"].value
+
+        image = model_to_image(model)
+        self.outputs["image"].put(Data(image))
 
 
 register_elements_auto(__name__, locals(), "Model operations",  1)
