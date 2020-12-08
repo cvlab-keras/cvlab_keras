@@ -39,7 +39,8 @@ def set_model(action_image, model: Model):
     model_string = model_to_string(model, line_length=line_len, positions=positions)
 
     line_count = model_string.count('\n')
-    if line_count > model_size_lim:  # for largest models display few first and last layers
+    # if view is not expanded display few first and last layers for bigger models
+    if not action_image.text_preview_expanded and line_count > model_size_lim:
         end_lines_count = 10
         start_lines_index = model_size_lim - end_lines_count
         end_lines_index = line_count - end_lines_count  # last few lines
