@@ -36,7 +36,7 @@ class _BatchLoader(InputElement):
                [IntParameter("epochs", value=1, min_=1, max_=100),
                 IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
                 ComboboxParameter("to_categorical", name="to categorical", values=[("Yes", True), ("No", False)]),
-                ButtonParameter("reload", self.reload, "Reload dataset")]
+                ButtonParameter("restart", self.restart, "Restart")]
 
     def update_parameters(self):
         """Updates values of parameters and returns True if dataset needs to be reloaded"""
@@ -61,11 +61,10 @@ class _BatchLoader(InputElement):
         self.batch_notifier.set()
         ThreadedElement.delete(self)
 
-    def reload(self):
-        """Reloads the whole dataset and starts sending batches from the beginning"""
+    def restart(self):
+        """Starts sending batches from the beginning"""
         self.total_batches_sent = 0
-        self.generate_dataset()
-        self.send_batches()
+        self.recalculate(True, False, True)
 
     def process(self):
         should_regenerate_dataset = self.update_parameters()
@@ -101,8 +100,6 @@ class _BatchLoader(InputElement):
             self.outputs["images"].put(image_sequence)
             self.outputs["labels"].put(label_sequence)
             self.total_batches_sent += 1
-
-            print(self.total_batches_sent)  # TODO (keras) delete -> only for debug
 
     def get_next_batch(self):
         """Returns single batch of data (images and labels) of given batch_size"""
