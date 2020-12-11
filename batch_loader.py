@@ -26,6 +26,7 @@ class _BatchLoader(InputElement):
         self.classes = None
         self.to_categorical = True
         self.batch_notifier = threading.Event()
+        self.should_reload = False
 
     def get_attributes(self):
         """Returns common attributes for all batch loaders"""
@@ -63,14 +64,14 @@ class _BatchLoader(InputElement):
 
     def reload(self):
         """Reloads the whole dataset and starts sending batches from the beginning"""
-        self.total_batches_sent = 0
-        self.generate_dataset()
-        self.send_batches()
+        self.should_reload = True
+        self.recalculate(True, False, True)
 
     def process(self):
         should_regenerate_dataset = self.update_parameters()
-        if should_regenerate_dataset:
+        if should_regenerate_dataset or self.should_reload:
             self.total_batches_sent = 0
+            self.should_reload = False
             self.generate_dataset()
             self.classes = list_to_dict(self.get_classes())   # classes are stored as pairs (class name: index)
             self.outputs["classes"].put(Data(self.classes.keys()))
