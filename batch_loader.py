@@ -100,12 +100,6 @@ class _BatchLoader(InputElement):
             self.outputs["images"].put(image_sequence)
             self.outputs["labels"].put(label_sequence)
             self.total_batches_sent += 1
-            self.display_progress()
-
-    def display_progress(self):
-        value = str.format("{}/{} batches, {}/{} epochs", self.total_batches_sent%self.number_of_batches,
-                           self.number_of_batches, self.total_batches_sent/self.batch_size + 1, self.epochs)
-        self.progress.setText(value)
 
     def get_next_batch(self):
         """Returns single batch of data (images and labels) of given batch_size"""
