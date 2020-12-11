@@ -26,7 +26,6 @@ class _BatchLoader(InputElement):
         self.classes = None
         self.to_categorical = True
         self.batch_notifier = threading.Event()
-        self.should_reload = False
 
     def get_attributes(self):
         """Returns common attributes for all batch loaders"""
@@ -37,7 +36,7 @@ class _BatchLoader(InputElement):
                [IntParameter("epochs", value=1, min_=1, max_=100),
                 IntParameter("batch_size", name="batch size", value=64, min_=1, max_=2048),
                 ComboboxParameter("to_categorical", name="to categorical", values=[("Yes", True), ("No", False)]),
-                ButtonParameter("reload", self.reload, "Reload dataset")]
+                ButtonParameter("restart", self.restart, "Restart")]
 
     def update_parameters(self):
         """Updates values of parameters and returns True if dataset needs to be reloaded"""
@@ -62,16 +61,15 @@ class _BatchLoader(InputElement):
         self.batch_notifier.set()
         ThreadedElement.delete(self)
 
-    def reload(self):
-        """Reloads the whole dataset and starts sending batches from the beginning"""
-        self.should_reload = True
+    def restart(self):
+        """Starts sending batches from the beginning"""
+        self.total_batches_sent = 0
         self.recalculate(True, False, True)
 
     def process(self):
         should_regenerate_dataset = self.update_parameters()
-        if should_regenerate_dataset or self.should_reload:
+        if should_regenerate_dataset:
             self.total_batches_sent = 0
-            self.should_reload = False
             self.generate_dataset()
             self.classes = list_to_dict(self.get_classes())   # classes are stored as pairs (class name: index)
             self.outputs["classes"].put(Data(self.classes.keys()))
@@ -102,8 +100,12 @@ class _BatchLoader(InputElement):
             self.outputs["images"].put(image_sequence)
             self.outputs["labels"].put(label_sequence)
             self.total_batches_sent += 1
+            self.display_progress()
 
-            print(self.total_batches_sent)  # TODO (keras) delete -> only for debug
+    def display_progress(self):
+        value = str.format("{}/{} batches, {}/{} epochs", self.total_batches_sent%self.number_of_batches,
+                           self.number_of_batches, self.total_batches_sent/self.batch_size + 1, self.epochs)
+        self.progress.setText(value)
 
     def get_next_batch(self):
         """Returns single batch of data (images and labels) of given batch_size"""
