@@ -77,8 +77,8 @@ class MultiGraph(Graph):
         return self.draw_figure()
 
 
-class PyQtVisualisation(NormalElement):
-    name = "Live plotting"
+class MetricsPlotter(NormalElement):
+    name = "Metrics plotter"
     comment = """\
     Generates plots for different metrics functions in real time.
     
@@ -92,7 +92,7 @@ class PyQtVisualisation(NormalElement):
     ALL = 2
 
     def __init__(self):
-        super(PyQtVisualisation, self).__init__()
+        super(MetricsPlotter, self).__init__()
 
         self.counter = 0
         self.loss = []
@@ -169,4 +169,4 @@ class PyQtVisualisation(NormalElement):
             return [self.loss, self.accuracy]
 
 
-register_elements("Keras Plotting", [PyQtVisualisation], 10)
+register_elements("Keras Plotting", [MetricsPlotter], 10)
