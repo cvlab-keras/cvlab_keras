@@ -178,6 +178,52 @@ class ModelTraining(NormalElement):
         self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
 
 
+class ModelTesting(NormalElement):
+    name = 'Model testing'
+    comment = 'Performs single test step on batch of data.'
+
+    def __init__(self):
+        super(ModelTesting, self).__init__()
+        self.batch = None
+        self.labels = None
+        self.model = None
+
+    def get_attributes(self):
+        return [Input("model"), Input("images"), Input("labels")], \
+               [Output("metrics")], \
+               []
+
+    def get_processing_units(self, inputs, parameters):
+        """Desequences input data"""
+        outputs = {name: Data() for name in self.outputs}
+        units = [ProcessingUnit(self, inputs, parameters, outputs)]
+        return units, outputs
+
+    def process_inputs(self, inputs, outputs, parameters):
+        model = inputs["model"].value
+        labels = inputs["labels"].value
+        batch = inputs["images"]
+
+        if model is not None and batch.is_complete() and (model != self.model or batch != self.batch):
+            self.batch = batch
+            self.labels = labels
+            self.model = model
+
+            # unpacked values from sequence are returned as list, we need to convert them after that to numpy array
+            images = np.array(batch.desequence_all())
+            if images.ndim == 3:
+                images = np.expand_dims(images, axis=3)     # add one axis for grayscale images
+            images = images.astype(dtype='float32')
+
+            result = self.model.test_on_batch(images, labels, return_dict=True)
+
+            self.outputs["metrics"].put(Data(result))
+            self.notify_batch_processing_finished()
+
+    def notify_batch_processing_finished(self):
+        self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
+
+
 class ModelToImage(NormalElement):
     name = 'Model to image'
     comment = 'Plots model to graphical representation\n' \
