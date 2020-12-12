@@ -1,8 +1,10 @@
 import matplotlib
-from cvlab.diagram.elements.base import *
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+from cvlab.diagram.elements.base import *
+from cvlab_keras.model_utils import model_to_image
+from cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 matplotlib.use('Qt5Agg')
@@ -126,9 +128,10 @@ class MetricsPlotter(NormalElement):
         self.widget_stack_bar.addWidget(self.toolbars[type])
 
     def get_attributes(self):
-        return [Input("metrics")], [Output("image")], [IntParameter("batch_step", value=1, min_=1),
-                                                    ComboboxParameter("function", {"Loss": "loss",
-                                                                                   "Accuracy": "acc", "All": "all"})]
+        return [Input("metrics")], \
+               [Output("image")], \
+               [IntParameter("batch_step", value=1, min_=1),
+                ComboboxParameter("function", {"Loss": "loss", "Accuracy": "acc", "All": "all"})]
 
     def process_inputs(self, inputs, outputs, parameters):
         model_data = inputs["metrics"].value
@@ -169,4 +172,19 @@ class MetricsPlotter(NormalElement):
             return [self.loss, self.accuracy]
 
 
-register_elements("Keras Plotting", [MetricsPlotter], 10)
+class ModelToImage(NormalElement):
+    name = 'Model to image'
+    comment = 'Plots model to graphical representation\n' \
+              'Requires Pydot module to work'
+
+    def get_attributes(self):
+        return [Input("model")], [Output("image")], []
+
+    def process_inputs(self, inputs, outputs, parameters):
+        model = inputs["model"].value
+
+        image = model_to_image(model)
+        self.outputs["image"].put(Data(image))
+
+
+register_elements_auto(__name__, locals(), "Keras visualisation", PLUGIN_PRIORITY + 4)

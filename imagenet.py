@@ -2,6 +2,7 @@ from tensorflow.keras.applications import imagenet_utils
 
 from cvlab.diagram.elements.base import *
 from cvlab_keras.model_operations import PredictionDecoder
+from cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 class ImageNetPredictionDecoder(NormalElement):
@@ -36,8 +37,8 @@ class ImageNetInputPreprocessor(NormalElement):
         '   normalize each channel with respect to the ImageNet dataset.'
 
     def get_attributes(self):
-        return [Input("input", name="input")], \
-               [Output("output", name="output")], \
+        return [Input("input")], \
+               [Output("output")], \
                [ComboboxParameter("mode", [('tf', 'tf'), ('caffe', 'caffe'), ('torch', 'torch')])]
 
     def process_inputs(self, inputs, outputs, parameters):
@@ -49,4 +50,4 @@ class ImageNetInputPreprocessor(NormalElement):
             outputs["output"] = Data(preprocessed)
 
 
-register_elements_auto(__name__, locals(), "ImageNet", 1)
+register_elements_auto(__name__, locals(), "Keras ImageNet", PLUGIN_PRIORITY + 5)
