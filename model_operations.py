@@ -2,11 +2,11 @@ from tensorflow.keras import models
 from math import ceil
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.model_utils import model_to_image
+from cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 class Predict(NormalElement):
-    name = 'Predict'
+    name = 'Model prediction'
     comment = \
         'Gets model prediction on an image\n' \
         'Visualises activation of a chosen layer on input image (all channels on one image)'
@@ -224,19 +224,4 @@ class ModelTesting(NormalElement):
         self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
 
 
-class ModelToImage(NormalElement):
-    name = 'Model to image'
-    comment = 'Plots model to graphical representation\n' \
-              'Requires Pydot module to work'
-
-    def get_attributes(self):
-        return [Input("model")], [Output("image")], []
-
-    def process_inputs(self, inputs, outputs, parameters):
-        model = inputs["model"].value
-
-        image = model_to_image(model)
-        self.outputs["image"].put(Data(image))
-
-
-register_elements_auto(__name__, locals(), "Model operations",  1)
+register_elements_auto(__name__, locals(), "Keras model operations",  PLUGIN_PRIORITY + 3)

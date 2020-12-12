@@ -1,9 +1,12 @@
-from cvlab.diagram.elements.base import *
 from tensorflow import keras
 from PIL import UnidentifiedImageError
 import matplotlib.pyplot as plt
 from random import shuffle
 import math
+
+from cvlab.diagram.elements.base import *
+from cvlab_keras.shared import PLUGIN_PRIORITY
+
 
 TXT_FILTER = "TXT (*.txt)"
 
@@ -249,4 +252,10 @@ class KerasDatasetBatchLoader(_BatchLoader):
         return classes
 
 
-register_elements("Image batch loading", [BatchLoaderFromFile, BatchLoaderFromDirectory, KerasDatasetBatchLoader], 20)
+elements = [
+    BatchLoaderFromFile,
+    BatchLoaderFromDirectory,
+    KerasDatasetBatchLoader
+]
+
+register_elements("Keras batch loading", elements, PLUGIN_PRIORITY + 1)

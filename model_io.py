@@ -1,6 +1,8 @@
 from tensorflow.keras import models, applications
 
 from cvlab.diagram.elements.base import *
+from cvlab_keras.shared import PLUGIN_PRIORITY
+
 
 HDF5_EXT = ".h5"
 HDF5_FILTER = "HDF5 (*" + HDF5_EXT + ")"
@@ -20,7 +22,7 @@ class _ModelFromDiskLoader(NormalElement):
         self.do_load = False
 
     def get_attributes_with_path(self, path_parameter):
-        return [], [Output("model", name="model")], \
+        return [], [Output("model")], \
                [path_parameter,
                 ButtonParameter("load", self.load, "Load")]
 
@@ -68,7 +70,7 @@ class _ModelToDiskSaver(NormalElement):
         self.do_save = False
 
     def get_attributes_with_path(self, path_parameter):
-        return [Input("model", name="model")], [], \
+        return [Input("model")], [], \
                [path_parameter,
                 ButtonParameter("save", self.save, "Save")]
 
@@ -139,7 +141,7 @@ class PretrainedModelLoader(NormalElement):
         # because model constructors are not JSON serializable we use workaround dictionary with key:key
         duplicate_key_dictionary = {key: key for key in self.model_constructor_dictionary.keys()}
         return [], \
-               [Output("model", name="model")], \
+               [Output("model")], \
                [ComboboxParameter("model", duplicate_key_dictionary),
                 ComboboxParameter("top", [("no", False), ("yes", True)], "include top"),
                 ComboboxParameter("weights", [("pre-trained - ImageNet", 'imagenet'), ("random", None)]),
@@ -177,4 +179,4 @@ elements = [
     PretrainedModelLoader
 ]
 
-register_elements("Model IO", elements, 1)
+register_elements("Keras model IO", elements, PLUGIN_PRIORITY + 2)
