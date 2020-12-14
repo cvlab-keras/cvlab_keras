@@ -118,7 +118,7 @@
       },
       "unique_id": "171884"
     },
-    "8": {
+    "9": {
       "_type": "element",
       "class": "InputCodeElement",
       "gui_options": {
@@ -137,7 +137,7 @@
       },
       "unique_id": "784640"
     },
-    "9": {
+    "10": {
       "_type": "element",
       "class": "ColorConverter",
       "gui_options": {
@@ -159,7 +159,7 @@
       },
       "unique_id": "274406"
     },
-    "10": {
+    "13": {
       "_type": "element",
       "class": "PredictionDecoder",
       "gui_options": {
@@ -178,7 +178,7 @@
       },
       "unique_id": "473074"
     },
-    "13": {
+    "16": {
       "_type": "element",
       "class": "InputCodeElement",
       "gui_options": {
@@ -197,7 +197,7 @@
       },
       "unique_id": "392412"
     },
-    "15": {
+    "17": {
       "_type": "element",
       "class": "TextComment",
       "gui_options": {
@@ -212,11 +212,11 @@
       },
       "module": "cvlab.diagram.elements.comment",
       "parameters": {
-        "editor": "Training metrics are visualised above as plot, you can switch between metric plots by changing parameter \"function\". <br/> <br/>\n\nIn this case prediction decoder uses default class names (digits) obtained from data loader. You can provide your own set of labels \nby using \"Input code element\" that returns list of human readable class names\n (example - unconnected element on the left).  <br/> <br/>\n\n\n\n"
+        "editor": "Training metrics are visualised above as plot. You can switch between metric plots by changing parameter \"function\". <br/> <br/>\n\nIn this case prediction decoder uses default class names (digits) obtained from data loader. You can provide your own set of labels \nby using \"Input code element\" that returns list of human readable class names\n (example - unconnected element on the left).  <br/> <br/>\n\n\n\n"
       },
       "unique_id": "119729"
     },
-    "16": {
+    "18": {
       "_type": "element",
       "class": "TextComment",
       "gui_options": {
@@ -241,7 +241,7 @@
     "0": {
       "from_element": 7,
       "from_output": "output",
-      "to_element": 9,
+      "to_element": 10,
       "to_input": "input"
     },
     "1": {
@@ -257,7 +257,7 @@
       "to_input": "images"
     },
     "3": {
-      "from_element": 9,
+      "from_element": 10,
       "from_output": "output",
       "to_element": 4,
       "to_input": "image"
@@ -265,7 +265,7 @@
     "4": {
       "from_element": 4,
       "from_output": "predictions",
-      "to_element": 10,
+      "to_element": 13,
       "to_input": "prediction"
     },
     "5": {
@@ -277,7 +277,7 @@
     "6": {
       "from_element": 6,
       "from_output": "classes",
-      "to_element": 10,
+      "to_element": 13,
       "to_input": "labels"
     },
     "7": {
@@ -287,15 +287,15 @@
       "to_input": "metrics"
     },
     "8": {
-      "from_element": 13,
+      "from_element": 16,
       "from_output": "output",
-      "to_element": 10,
+      "to_element": 13,
       "to_input": "labels"
     },
     "9": {
       "from_element": 6,
       "from_output": "classes",
-      "to_element": 10,
+      "to_element": 13,
       "to_input": "labels"
     }
   },
