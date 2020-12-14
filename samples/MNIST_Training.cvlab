@@ -114,7 +114,7 @@
       },
       "module": "cvlab.diagram.elements.image_io",
       "parameters": {
-        "path": "CVLAB_DIR/../images/mnist/8.png"
+        "path": "../images/mnist/8.png"
       },
       "unique_id": "171884"
     },
