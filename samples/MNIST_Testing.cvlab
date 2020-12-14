@@ -1,0 +1,166 @@
+{
+  "_filetype": "CV-Lab diagram save file. See: https://github.com/cvlab-ai/cvlab ",
+  "_type": "diagram",
+  "_version": "1.2.1",
+  "elements": {
+    "1": {
+      "_type": "element",
+      "class": "MetricsPlotter",
+      "gui_options": {
+        "position": [
+          50205,
+          49588
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": false
+      },
+      "module": "cvlab_keras.visualisation",
+      "parameters": {
+        "batch_step": 1,
+        "function": {
+          "name": "Accuracy",
+          "value": "acc"
+        }
+      },
+      "unique_id": "023975"
+    },
+    "2": {
+      "_type": "element",
+      "class": "ModelTesting",
+      "gui_options": {
+        "position": [
+          49940,
+          49940
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab_keras.model_operations",
+      "parameters": {},
+      "unique_id": "509673"
+    },
+    "3": {
+      "_type": "element",
+      "class": "KerasDatasetBatchLoader",
+      "gui_options": {
+        "position": [
+          49560,
+          49960
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": false
+      },
+      "module": "cvlab_keras.batch_loader",
+      "parameters": {
+        "batch_size": 64,
+        "dataset": {
+          "name": "MNIST",
+          "value": "MNIST"
+        },
+        "epochs": 1,
+        "restart": "",
+        "to_categorical": {
+          "name": "Yes",
+          "value": true
+        },
+        "type": {
+          "name": "test",
+          "value": 1
+        }
+      },
+      "unique_id": "982539"
+    },
+    "4": {
+      "_type": "element",
+      "class": "ModelFromFileLoader",
+      "gui_options": {
+        "position": [
+          49560,
+          49820
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab_keras.model_io",
+      "parameters": {
+        "load": "",
+        "path": "../models/MNIST_model.h5"
+      },
+      "unique_id": "581720"
+    },
+    "5": {
+      "_type": "element",
+      "class": "TextComment",
+      "gui_options": {
+        "position": [
+          49840,
+          49560
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.comment",
+      "parameters": {
+        "editor": "Testing metrics are visualised with plotting element (like in training). You can switch between metric plots by changing parameter \"function\"."
+      },
+      "unique_id": "103318"
+    },
+    "12": {
+      "_type": "element",
+      "class": "TextComment",
+      "gui_options": {
+        "position": [
+          49280,
+          49680
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": true,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.comment",
+      "parameters": {
+        "editor": "This diagram shows process of model testing on <b>MNIST</b> dataset. <br/><br/>\nWe test model that has been trained using \"Examples/Mnist_Training\" diagram. <br/><br/>\n<br/><br/><br/>\nTo <b>start testing</b> click Load button ----------->"
+      },
+      "unique_id": "488329"
+    }
+  },
+  "params": [],
+  "wires": {
+    "0": {
+      "from_element": 4,
+      "from_output": "model",
+      "to_element": 2,
+      "to_input": "model"
+    },
+    "1": {
+      "from_element": 3,
+      "from_output": "images",
+      "to_element": 2,
+      "to_input": "images"
+    },
+    "2": {
+      "from_element": 3,
+      "from_output": "labels",
+      "to_element": 2,
+      "to_input": "labels"
+    },
+    "3": {
+      "from_element": 2,
+      "from_output": "metrics",
+      "to_element": 1,
+      "to_input": "metrics"
+    }
+  },
+  "zoom_level": 1.0
+}
