@@ -5,7 +5,7 @@ from tensorflow.keras import utils
 from io import StringIO
 
 from cvlab.view.widgets import ActionImage
-from cvlab_keras.cvlab_keras.shared import IMAGES_DIR
+from cvlab_keras.shared import IMAGES_DIR
 
 
 def model_to_image(model: Model):

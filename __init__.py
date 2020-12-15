@@ -5,7 +5,7 @@ from cvlab.view.widgets import OutputPreview
 from cvlab_samples import add_samples_submenu
 
 from .model_utils import set_model
-from cvlab_keras.cvlab_keras.shared import SAMPLES_DIR
+from cvlab_keras.shared import SAMPLES_DIR
 
 # limit gpu usage for tensorflow
 gpus = tf.config.experimental.list_physical_devices('GPU')

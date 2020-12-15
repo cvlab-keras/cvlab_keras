@@ -2,7 +2,7 @@ from tensorflow.keras import models
 from math import ceil
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
+from cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 class Predict(NormalElement):
