@@ -54,7 +54,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Karolina Baryłka, Katarzyna Kaczorowska, Filip Chodziutko',
-    url='https://github.com/cvlab-keras/cvlab_keras',
+    url='https://github.com/cvlab-keras/cvlab_keras@test_installation',
     packages=find_packages(),
     package_data=find_package_data(),
     license="AGPL-3.0+",
