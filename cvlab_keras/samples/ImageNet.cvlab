@@ -1,0 +1,232 @@
+{
+  "_filetype": "CV-Lab diagram save file. See: https://github.com/cvlab-ai/cvlab ",
+  "_type": "diagram",
+  "_version": "1.2.1",
+  "elements": {
+    "2": {
+      "_type": "element",
+      "class": "PretrainedModelLoader",
+      "gui_options": {
+        "position": [
+          49480,
+          49520
+        ],
+        "preview_size": 104,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": false
+      },
+      "module": "cvlab_keras.model_io",
+      "parameters": {
+        "height": 224,
+        "load": "",
+        "model": {
+          "name": "MobileNetV2",
+          "value": "MobileNetV2"
+        },
+        "top": {
+          "name": "yes",
+          "value": true
+        },
+        "weights": {
+          "name": "pre-trained - ImageNet",
+          "value": "imagenet"
+        },
+        "width": 224
+      },
+      "unique_id": "740279"
+    },
+    "3": {
+      "_type": "element",
+      "class": "Resizer",
+      "gui_options": {
+        "position": [
+          49500,
+          49800
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": true,
+        "show_sliders": false
+      },
+      "module": "cvlab.diagram.elements.basic_transforms",
+      "parameters": {
+        "height": 224,
+        "width": 224
+      },
+      "unique_id": "245068"
+    },
+    "4": {
+      "_type": "element",
+      "class": "ImageNetInputPreprocessor",
+      "gui_options": {
+        "position": [
+          49700,
+          49800
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab_keras.imagenet",
+      "parameters": {
+        "mode": {
+          "name": "tf",
+          "value": "tf"
+        }
+      },
+      "unique_id": "873368"
+    },
+    "5": {
+      "_type": "element",
+      "class": "ImageLoader",
+      "gui_options": {
+        "position": [
+          49220,
+          49800
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": true,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.image_io",
+      "parameters": {
+        "path": "/home/filip/studia/inz/cvlab/cvlab/lena.jpg"
+      },
+      "unique_id": "644485"
+    },
+    "7": {
+      "_type": "element",
+      "class": "TextComment",
+      "gui_options": {
+        "position": [
+          49180,
+          49480
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.comment",
+      "parameters": {
+        "editor": "This diagram shows: <br/>\n- how to load model trained for classifying images from ImagNet dataset,<br/>\n- how to preprocess image for classification,<br/>\n- how to classify image,<br/>\n- how to decode model prediction.<br/>\n<br/>\nTo start processing click Load button ------>"
+      },
+      "unique_id": "651835"
+    },
+    "8": {
+      "_type": "element",
+      "class": "ImageNetPredictionDecoder",
+      "gui_options": {
+        "position": [
+          50240,
+          49520
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": true,
+        "show_sliders": false
+      },
+      "module": "cvlab_keras.imagenet",
+      "parameters": {
+        "top": 5
+      },
+      "unique_id": "432724"
+    },
+    "10": {
+      "_type": "element",
+      "class": "Predict",
+      "gui_options": {
+        "position": [
+          49960,
+          49520
+        ],
+        "preview_size": 378,
+        "show_parameters": true,
+        "show_preview": true,
+        "show_sliders": false
+      },
+      "module": "cvlab_keras.model_operations",
+      "parameters": {
+        "layer": 4,
+        "row": 4,
+        "spacing": 2
+      },
+      "unique_id": "254182"
+    },
+    "14": {
+      "_type": "element",
+      "class": "TextComment",
+      "gui_options": {
+        "position": [
+          49680,
+          49940
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.comment",
+      "parameters": {
+        "editor": "Lena image is preprocessed in 2 steps: <br/>\n1. Resized to width and height accepted by model input layer. <br/>\n2. Preprocessed in mode \"tf\", which scales pixels between -1 and 1."
+      },
+      "unique_id": "239476"
+    },
+    "15": {
+      "_type": "element",
+      "class": "TextComment",
+      "gui_options": {
+        "position": [
+          50240,
+          49720
+        ],
+        "preview_size": 120,
+        "show_parameters": true,
+        "show_preview": false,
+        "show_sliders": null
+      },
+      "module": "cvlab.diagram.elements.comment",
+      "parameters": {
+        "editor": "MobileNetV2 model is loaded and used to classify image.\n <br/><br/>\nOutput of chosen model layer is displayed in \"Model prediction\" preview. To switch layers change layer index value. \n<br/><br/>\nLena image is classified mainly as bonnet, which makes sense as she is wearing a hat. "
+      },
+      "unique_id": "890692"
+    }
+  },
+  "params": [],
+  "wires": {
+    "0": {
+      "from_element": 5,
+      "from_output": "output",
+      "to_element": 3,
+      "to_input": "input"
+    },
+    "1": {
+      "from_element": 3,
+      "from_output": "output",
+      "to_element": 4,
+      "to_input": "input"
+    },
+    "2": {
+      "from_element": 4,
+      "from_output": "output",
+      "to_element": 10,
+      "to_input": "image"
+    },
+    "3": {
+      "from_element": 2,
+      "from_output": "model",
+      "to_element": 10,
+      "to_input": "model"
+    },
+    "4": {
+      "from_element": 10,
+      "from_output": "predictions",
+      "to_element": 8,
+      "to_input": "prediction"
+    }
+  },
+  "zoom_level": 1.0
+}
