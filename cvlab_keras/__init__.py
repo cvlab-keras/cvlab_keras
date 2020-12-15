@@ -3,6 +3,7 @@ import tensorflow as tf
 from cvlab.diagram.elements import load_auto
 from cvlab.view.widgets import OutputPreview
 from cvlab_samples import add_samples_submenu
+from .model_operations import register_model_operations
 
 from .model_utils import set_model
 from .shared import SAMPLES_DIR
@@ -28,3 +29,5 @@ load_auto(__file__)
 
 # load example diagrams
 add_samples_submenu('Keras', SAMPLES_DIR)
+
+register_model_operations()
