@@ -34,11 +34,11 @@ if sys.version_info.major <= 2:
 
 requirements = [
     "cvlab>=1.3.0rc1",
-    "tensorflow>=2.3"       # TODO (keras) add required version at the end
+    "tensorflow>=2.3"
 ]
 
 
-__version__ = "0.1rc1"
+__version__ = "0.1"
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
