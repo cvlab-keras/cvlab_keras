@@ -19,7 +19,7 @@ def find_package_data():
     package_data = {}
 
     packages = glob("cvlab_*/__init__.py")
-    extensions = [".cvlab", ".jpg", ".png", ".dcm", ".json", ".bmp"]
+    extensions = [".cvlab", ".jpg", ".png", ".dcm", ".json", ".bmp", ".h5", ".txt"]
 
     for package_name in packages:
         package_name = package_name.replace("\\", "/").split("/")[0]
