@@ -224,5 +224,4 @@ class ModelTesting(NormalElement):
         self.inputs["labels"].connected_from[0].parent.batch_notifier.set()
 
 
-def register_model_operations():
-    register_elements_auto(__name__, locals(), "Keras model operations",  PLUGIN_PRIORITY + 3)
+register_elements_auto(__name__, locals(), "Keras model operations",  PLUGIN_PRIORITY + 3)
