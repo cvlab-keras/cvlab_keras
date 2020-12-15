@@ -5,7 +5,7 @@ from random import shuffle
 import math
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.shared import PLUGIN_PRIORITY
+from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 TXT_FILTER = "TXT (*.txt)"

@@ -3,8 +3,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 from matplotlib.figure import Figure
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.model_utils import model_to_image
-from cvlab_keras.shared import PLUGIN_PRIORITY
+from cvlab_keras.cvlab_keras.model_utils import model_to_image
+from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
 
 
 matplotlib.use('Qt5Agg')
