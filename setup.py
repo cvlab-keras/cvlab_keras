@@ -33,12 +33,12 @@ if sys.version_info.major <= 2:
 
 
 requirements = [
-    "cvlab>=1.2",
-    "tensorflow",       # TODO (keras) add required version at the end
+    "cvlab>=1.3.0rc1",
+    "tensorflow>=2.3",       # TODO (keras) add required version at the end
 ]
 
 
-__version__ = "0.1"
+__version__ = "0.1rc1"
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
@@ -54,10 +54,10 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Karolina Baryłka, Katarzyna Kaczorowska, Filip Chodziutko',
-    url='https://github.com/filip-chodziutko/cvlab_keras',
+    url='https://github.com/cvlab-keras/cvlab_keras',
     packages=find_packages(),
     package_data=find_package_data(),
     license="AGPL-3.0+",
-    python_requires='>=3.3',
+    python_requires='>=3.5',
     install_requires=requirements,
 )
