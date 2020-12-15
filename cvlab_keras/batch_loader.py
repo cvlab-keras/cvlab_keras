@@ -1,11 +1,10 @@
 from tensorflow import keras
-from PIL import UnidentifiedImageError
 import matplotlib.pyplot as plt
 from random import shuffle
 import math
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.shared import PLUGIN_PRIORITY
+from .shared import PLUGIN_PRIORITY
 
 
 TXT_FILTER = "TXT (*.txt)"
@@ -136,7 +135,7 @@ class _BatchLoaderFromDisk(_BatchLoader):
             try:
                 images.append(plt.imread(image_path))
                 labels.append(label)
-            except (SyntaxError, UnidentifiedImageError):  # plt.imread() file exception (f.e. not a PNG file exception)
+            except (SyntaxError, OSError):  # plt.imread() file exception (f.e. not a PNG file exception)
                 continue
         return images, labels
 
