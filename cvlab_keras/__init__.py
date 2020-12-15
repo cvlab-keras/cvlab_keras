@@ -29,5 +29,3 @@ load_auto(__file__)
 
 # load example diagrams
 add_samples_submenu('Keras', SAMPLES_DIR)
-
-register_model_operations()

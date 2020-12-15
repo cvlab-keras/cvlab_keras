@@ -2,7 +2,7 @@ from tensorflow.keras import models
 from math import ceil
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
+from .shared import PLUGIN_PRIORITY
 
 
 class Predict(NormalElement):
@@ -225,4 +225,4 @@ class ModelTesting(NormalElement):
 
 
 def register_model_operations():
-    register_elements_auto(__name__, locals(), "Keras model operations",  999)
+    register_elements_auto(__name__, locals(), "Keras model operations",  PLUGIN_PRIORITY + 3)
