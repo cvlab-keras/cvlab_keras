@@ -18,12 +18,9 @@ def add_package(package_data, package_name, extensions):        # TODO (keras) m
 def find_package_data():
     package_data = {}
 
-    packages = glob("__init__.py")
     extensions = [".cvlab", ".jpg", ".png", ".dcm", ".json", ".bmp", ".h5"]     # TODO (keras) what's the function of these extensions? should we add also txt?
 
-    for package_name in packages:
-        package_name = package_name.replace("\\", "/").split("/")[0]
-        add_package(package_data, package_name, extensions)
+    add_package(package_data, "../cvlab_keras", extensions)
 
     return package_data
 
