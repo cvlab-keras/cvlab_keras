@@ -35,6 +35,7 @@ if sys.version_info.major <= 2:
 requirements = [
     "cvlab>=1.3.0rc1",
     "tensorflow>=2.3",       # TODO (keras) add required version at the end
+    "pillow"
 ]
 
 
