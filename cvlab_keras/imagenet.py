@@ -1,8 +1,8 @@
 from tensorflow.keras.applications import imagenet_utils
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.cvlab_keras.model_operations import PredictionDecoder
-from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
+from .model_operations import PredictionDecoder
+from .shared import PLUGIN_PRIORITY
 
 
 class ImageNetPredictionDecoder(NormalElement):

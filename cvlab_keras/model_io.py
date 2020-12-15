@@ -1,7 +1,7 @@
 from tensorflow.keras import models, applications
 
 from cvlab.diagram.elements.base import *
-from cvlab_keras.cvlab_keras.shared import PLUGIN_PRIORITY
+from .shared import PLUGIN_PRIORITY
 
 
 HDF5_EXT = ".h5"
