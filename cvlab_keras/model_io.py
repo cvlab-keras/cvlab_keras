@@ -8,9 +8,6 @@ HDF5_EXT = ".h5"
 HDF5_FILTER = "HDF5 (*" + HDF5_EXT + ")"
 
 
-# TODO (cvlab_keras) set convention for input and output names
-
-
 class _ModelFromDiskLoader(NormalElement):
     """
     Base class for elements that load models from disk.
@@ -123,8 +120,6 @@ class PretrainedModelLoader(NormalElement):
         "InceptionV3": applications.InceptionV3,
         "MobileNet": applications.MobileNet,
         "MobileNetV2": applications.MobileNetV2,
-        # "NASNetLarge": applications.NASNetLarge,   # TODO (cvlab_keras) use NASNets when they will support False
-        # "NASNetMobile": applications.NASNetMobile, # value for argument include_top in constructor
         "ResNet101V2": applications.ResNet101V2,
         "ResNet152V2": applications.ResNet152V2,
         "ResNet50V2": applications.ResNet50V2,

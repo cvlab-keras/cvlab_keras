@@ -8,7 +8,7 @@ from setuptools import find_packages
 from glob import glob
 
 
-def add_package(package_data, package_name, extensions):        # TODO (keras) make sure if it is necessary in the plugin
+def add_package(package_data, package_name, extensions):
     files = glob(package_name + "/**", recursive=True)
     files = list(map(lambda x: x[len(package_name)+1:].replace("\\", "/"), files))
     files = [f for f in files if any(f.endswith(e) for e in extensions)]
@@ -38,7 +38,7 @@ requirements = [
 ]
 
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
