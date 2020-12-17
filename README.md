@@ -6,7 +6,7 @@ It adds a toolkit for machine learning and a bunch of examples.
 This extension is a wrapper for machine learning library 
 [`tf.keras`](https://www.tensorflow.org/api_docs/python/tf/keras).
 
-Requirements: `cvlab>=1.3.0rc1`,`tensorflow>=2.3`
+Requirements: `cvlab>=1.3.0rc1`, `tensorflow>=2.3`
 
 # Installation
 
@@ -14,4 +14,4 @@ Requirements: `cvlab>=1.3.0rc1`,`tensorflow>=2.3`
 
 or directly from GIT repository:
 
-`pip install git+https://github.com/filip-chodziutko/cvlab_keras.git`
+`pip install git+https://github.com/cvlab-keras/cvlab_keras.git`
